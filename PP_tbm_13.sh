@@ -9,30 +9,32 @@ scriptDir=${workDir}/Scripts
 tempDir=${workDir}/Template
 jlfDir=${tempDir}/priors_JLF
 
-vbmDir=${workDir}/VBM
-stats1Dir=${vbmDir}/stats_Hip
-stats2Dir=${vbmDir}/stats_MTG
-matDir=${vbmDir}/matrices
+tbmDir=${workDir}/TBM
+stats1Dir=${tbmDir}/stats_Hip
+stats2Dir=${tbmDir}/stats_MTG
+matDir=${tbmDir}/matrices
 
-for a in $vbmDir $stats1Dir $stats2Dir $matDir; do
-    if [ ! -d $a ]; then
-        mkdir -p $a
-    fi
+for a in $tbmDir $stats1Dir $stats2Dir $matDir; do
+if [ ! -d $a ]; then
+mkdir -p $a
+fi
 done
 
 
 
 ### Arrays
-roiL=(0017 1015)
-roiR=(0053 2015)
-label=(Hip MTG)
+roiL=(0012 0017 1015)
+roiR=(0051 0053 2015)
+label=(Put Hip MTG)
 
 # all subjects
 c=0; for i in $(ls ${workDir}/Run1/); do
     path=${workDir}/Run1/
     subject=${i/$path}
-    subj[$c]=$subject
-    let c=$[$c+1]
+    if [[ $subject != xs* ]]; then
+        subj[$c]=$subject
+        let c=$[$c+1]
+    fi
 done
 
 # some subjects
@@ -53,7 +55,7 @@ stepLen=${#stepList[@]}
 
 
 ### Stitch, binarize template priors
-cd $vbmDir
+cd $tbmDir
 
 c=0; while [ $c -lt $roiLen ]; do
     if [ ! -f Template_"${label[$c]}"_bin.nii.gz ]; then
@@ -76,7 +78,7 @@ done
 
 
 ### Make subject roi normalized to template files, for 20 subjects
-runDir=${workDir}/Run2
+runDir=${workDir}/Run1
 cd $runDir
 
 for a in ${subjList[@]}; do
@@ -84,17 +86,17 @@ subjDir=${runDir}/$a
 cd $subjDir
 
     for i in ${stepList[@]}; do
-    stepDir=${subjDir}/$i
+    stepDir=${subjDir}/${i}/scan1
     cd $stepDir
 
         for j in ${label[@]}; do
-            if [ ! -f ${vbmDir}/${a}_${i}_${j}_NTT.nii.gz ]; then
+            if [ ! -f ${tbmDir}/${a}_${i}_${j}_NTT.nii.gz ]; then
 
                 ImageMath 3 \
-                ${vbmDir}/${a}_${i}_${j}_NTT.nii.gz \
+                ${tbmDir}/${a}_${i}_${j}_NTT.nii.gz \
                 m \
-                act_CorticalThicknessNormalizedToTemplate.nii.gz \
-                ${vbmDir}/Template_${j}_bin.nii.gz
+                struct_LogJacNTT_act.nii.gz \
+                ${tbmDir}/Template_${j}_bin.nii.gz
 
             fi
         done
@@ -118,8 +120,8 @@ for (( i=1; i<=$subjLen; i++)); do
 done
 
 c1=0; while [ $c1 -lt $roiLen ]; do
-print=${matDir}/list_${label[$c1]}.txt
-> $print
+    print=${matDir}/list_${label[$c1]}.txt
+    > $print
 
     for i in ${subjList[@]}; do
         c2=0; while [ $c2 -lt $stepLen ]; do
