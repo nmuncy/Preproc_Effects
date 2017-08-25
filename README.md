@@ -1,5 +1,5 @@
 # Preproc_Effects
-Hosted scripts for building templates, template priors, pre-processing data, extraction ROI volumes, and running a tensor-based morphometric analysis
+Hosted scripts for building templates and template priors, pre-processing data, extracting ROI volumes, and running a tensor-based morphometric analysis.
 
 Basic Notes: 
 1) Scripts that start with "MT" are used for creating a template.
